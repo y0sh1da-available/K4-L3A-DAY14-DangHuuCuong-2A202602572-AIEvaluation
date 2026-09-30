@@ -2,6 +2,8 @@
 
 ## AI Evaluation & Benchmarking · Lab Worksheet
 
+**Học viên:** Đặng Hữu Cương · **MSSV:** 2A202602572
+
 **Thời gian làm bài:** 14:15–17:00
 
 **Domain:** OrbitTech Store Customer Support

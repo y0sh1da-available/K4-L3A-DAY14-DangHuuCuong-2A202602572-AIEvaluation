@@ -2,6 +2,8 @@
 
 ## Evaluation Report & Failure Analysis
 
+**Học viên:** Đặng Hữu Cương · **MSSV:** 2A202602572
+
 Dùng kết quả thật trong `artifacts/benchmark_results.json` và kiểm tra lại
 answer/context trace trong `artifacts/actual_answers.json` trước khi kết luận.
 

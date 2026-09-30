@@ -1,5 +1,11 @@
 # Hướng dẫn nộp bài (SUBMISSION)
 
+## Thông tin sinh viên nộp bài
+- **Họ và tên:** Đặng Hữu Cương
+- **Mã số sinh viên (MSSV):** 2A202602572
+- **Tên repository:** `K4-L3A-DAY14-DangHuuCuong-2A202602572-AIEvaluation`
+- **Link repo:** `https://github.com/y0sh1da-available/K4-L3A-DAY14-DangHuuCuong-2A202602572-AIEvaluation`
+
 ## 1. Hình thức nộp bài
 - Bài tập được thực hiện theo hình thức **cá nhân**.
 - **Mỗi cá nhân phải tự nộp link repo của mình lên hệ thống LMS / Codelab** theo thông báo của giảng viên hoặc coach (mỗi học viên một repository riêng, không nộp hộ, không dùng chung repo).
@@ -47,7 +53,7 @@ Các file sinh ra trong quá trình chạy (artifacts) là tùy chọn (optional
 
 Hãy chạy các kiểm tra sau và tích chọn đầy đủ trước khi nộp bài:
 
-- [x] Repository đã được đặt đúng tên chuẩn: `K4-L3A-DAY14-<HoVaTen>-<MSSV>-AIEvaluation`.
+- [x] Repository đã được đặt đúng tên chuẩn: `K4-L3A-DAY14-DangHuuCuong-2A202602572-AIEvaluation`.
 - [x] Chạy `python validate_golden_dataset.py` báo `PASS`.
 - [x] Toàn bộ required tests pass khi chạy `pytest tests/ -v` (41 passed, 1 skipped nếu không làm bonus).
 - [x] `golden_dataset.json` đủ 20 QA (5 Easy + 7 Medium + 5 Hard + 3 Adversarial).
