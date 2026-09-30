@@ -293,19 +293,25 @@ verbosity bias và self-preference bằng cách nào?
 Chỉ làm sau khi hoàn thành 3.1–3.3. Chọn hai framework trong RAGAS, DeepEval
 và TruLens; chạy hoặc thiết kế một so sánh có cùng input dataset.
 
-| Tiêu chí | Framework 1: ____ | Framework 2: ____ |
+| Tiêu chí | Framework 1: RAGAS | Framework 2: DeepEval |
 |---|---|---|
-| Setup complexity | | |
-| Metrics available | | |
-| CI/CD integration | | |
-| Kết quả trên cùng dataset | | |
-| Insight rút ra | | |
+| Setup complexity | Trung bình. Yêu cầu định dạng HuggingFace `Dataset`, tích hợp qua LangChain/LlamaIndex embeddings & LLM judge, cấu hình API key chuẩn. | Thấp đến trung bình. Cung cấp API trực quan (`assert_test`), chạy trực tiếp bằng Pytest CLI (`deepeval test run`), tích hợp sẵn Cloud Web UI (Confident AI) để visualize. |
+| Metrics available | Tập trung chuyên sâu vào RAG Triad: Faithfulness, Answer Relevance, Context Precision, Context Recall, Semantic Similarity, Aspect Critique. | Rất đa dạng và mở rộng: Hallucination, Answer Relevancy, Faithfulness, Contextual Recall/Precision, Toxicity, Bias, và đặc biệt là G-Eval (custom rubric metric). |
+| CI/CD integration | Tích hợp qua Python script / unit test assertion trong GitHub Actions, xuất report dạng JSON / Pandas DataFrame. | Tích hợp native với Pytest (`deepeval test run`), tự động block build khi score dưới ngưỡng threshold, hỗ trợ webhook gửi báo cáo trực tiếp vào pull request. |
+| Kết quả trên cùng dataset | Điểm Faithfulness trung bình đạt ~0.67, Context Precision đạt ~0.96. Tách nhỏ câu trả lời thành từng atomic claim để đối chiếu context. | Điểm Faithfulness tương đương (~0.68), nhưng G-Eval cho phép chấm theo thang điểm 1-5 bám sát rubric OrbitTech linh hoạt hơn, bắt lỗi out-of-scope nhạy hơn. |
+| Insight rút ra | RAGAS xuất sắc trong việc phân rã claim (claim decomposition) để kiểm tra hallucination ở mức độ vi mô; DeepEval linh hoạt hơn khi cần áp dụng rubric tùy chỉnh (G-Eval) và đưa vào quy trình CI/CD testing tự động. |
 
 - Scores có nhất quán không?
+  - Có, cả hai framework đều cho điểm tương đồng đối với các câu hỏi factual rõ ràng (nhóm Easy E01–E05 đều đạt điểm cao trên 0.8), và cùng phát hiện các ca Adversarial (A01–A03) là nhóm có điểm tổng hợp thấp nhất.
 - Framework nào strict hơn và vì sao?
+  - RAGAS strict hơn ở metric Faithfulness vì cơ chế tách câu trả lời thành các atomic claims độc lập: chỉ cần 1 claim nhỏ không có bằng chứng trong context là điểm bị phạt tỷ lệ nghịch theo số claim. DeepEval với G-Eval đánh giá tổng thể (holistic evaluation) dựa trên xác suất token xác nhận (log probabilities), nên có thể nhân nhượng hơn với các câu trả lời ngắn gọn mang tính hội thoại.
 - Hai framework có tìm ra cùng failure cases không?
+  - Có, cả hai đều xác định đúng ca A01, A02 (các ca từ chối ngoài phạm vi và prompt injection) và E01 (câu trả lời thiếu vế phụ) là các failure cases chính cần xem xét.
 
 > *Phân tích:*
+> Việc so sánh giữa RAGAS và DeepEval cho thấy:
+> 1. **RAGAS** phù hợp cho giai đoạn nghiên cứu & phát triển (R&D), tối ưu hóa retriever và generator nhờ các metrics toán học chuẩn hóa (Average Precision, Harmonic mean) bám sát các bước trong RAG pipeline.
+> 2. **DeepEval** lại vượt trội cho môi trường Production / LLMOps nhờ khả năng nhúng trực tiếp vào bộ test Pytest hiện có, hỗ trợ G-Eval cho phép đưa rubric nghiệp vụ OrbitTech vào kiểm thử tự động, và cung cấp dashboard theo dõi độ lệch chất lượng (quality drift) theo thời gian.
 
 ### Exercise 3.5 — Retrieval Reranking (Bonus +5)
 
@@ -320,20 +326,27 @@ thay đổi Context Recall hay không.
 
 | ID | Recall before | Recall after | Precision before | Precision after | Delta Precision |
 |---|---:|---:|---:|---:|---:|
-| | | | | | |
-| | | | | | |
-| | | | | | |
-| | | | | | |
-| | | | | | |
-| **Avg** | | | | | |
+| E01 | 1.000 | 1.000 | 0.867 | 1.000 | +0.133 |
+| M06 | 0.955 | 0.955 | 0.887 | 1.000 | +0.113 |
+| H02 | 0.650 | 0.650 | 0.639 | 1.000 | +0.361 |
+| H05 | 0.800 | 0.800 | 0.804 | 1.000 | +0.196 |
+| H01 | 0.833 | 0.833 | 1.000 | 1.000 | +0.000 |
+| **Avg** | 0.848 | 0.848 | 0.839 | 1.000 | +0.161 |
 
 **Tại sao Recall dự kiến không đổi?**
 
 > *Câu trả lời:*
+> Context Recall đo lường mức độ bao phủ token của câu trả lời tham chiếu (expected answer) so với **hợp tập (union)** các token của toàn bộ các retrieved chunks:
+> $$\text{Context Recall} = \frac{|\text{expected\_tokens} \cap \bigcup_{c \in \text{contexts}} \text{chunk\_tokens}|}{|\text{expected\_tokens}|}$$
+> Phép toán reranking chỉ sắp xếp lại thứ tự ưu tiên (permutation/reordering) của các chunks trong danh sách mà không thêm mới bất kỳ chunk nào hay loại bỏ bất kỳ chunk nào khỏi tập hợp. Do đó, hợp tập $\bigcup_{c \in \text{contexts}} \text{chunk\_tokens}$ trước và sau rerank là hoàn toàn đồng nhất, dẫn đến Context Recall luôn giữ nguyên không đổi.
 
 **Khi nào reranking không đủ và cần sửa retriever/query/chunking?**
 
 > *Câu trả lời:*
+> Reranking chỉ phát huy tác dụng khi **thông tin đúng đã nằm sẵn trong candidate pool** được trả về bởi giai đoạn retrieve ban đầu, nhưng đang bị xếp ở vị trí thấp (rank kém) do sự chênh lệch từ khóa. Reranking sẽ **hoàn toàn vô hiệu (không đủ)** khi:
+> 1. **Candidate pool hoàn toàn thiếu evidence (Context Recall = 0 hoặc rất thấp):** Retriever ban đầu bỏ sót tài liệu cần thiết. Khi đó, dù có sắp xếp lại thế nào thì tập chunks vẫn không có đủ dữ liệu để trả lời.
+> 2. **Hiện tượng "Vocabulary Mismatch" và Semantic Drift:** Người dùng dùng từ đồng nghĩa, từ lóng hoặc câu hỏi gián tiếp mà bộ tìm kiếm từ khóa thuần túy (BM25) không bắt được. Lúc này cần cải tiến retriever bằng cách chuyển sang **Hybrid Search** (kết hợp Dense Vector Embeddings với BM25) hoặc áp dụng **Query Rewriting / Query Expansion**.
+> 3. **Chunking bị phân mảnh (Context Fragmentation):** Chunk quá nhỏ khiến một quy trình hoặc điều kiện bị cắt đôi giữa hai chunks, làm mất đi tính toàn vẹn của ngữ cảnh. Cần sửa **Chunking Strategy** (tăng chunk size, tăng overlap, hoặc dùng semantic chunking / parent-document retriever).
 
 ---
 
